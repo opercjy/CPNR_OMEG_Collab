@@ -61,8 +61,8 @@
 1.  **소스 코드 복제 (Clone)**
 
     ```bash
-    git clone https://github.com/opercjy/CPNR_OMEG_Collab
-    cd CPNR_OMEG_Collab
+    git clone https://github.com/opercjy/CPNR_OMEG_colab_high_energy
+    cd CPNR_OMEG_colab_high_energy
     ```
 
 2.  **빌드 디렉토리 생성**
@@ -80,7 +80,7 @@
     source /path/to/root-install/bin/thisroot.sh
     ```
 
-4.  **CMake 실행 (모드 선택)**
+4.  **CMake 실행 (모드 선택) (build 폴더 위치로 이동한 상태)**
 
       * **A) 인터랙티브 모드 (Qt GUI 포함) 빌드:**
         ```bash
