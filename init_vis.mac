@@ -1,0 +1,39 @@
+#=======================================================
+# init_vis.mac
+# Interactive mode visualization settings
+#=======================================================
+
+#---- Window and Scene Setup ----#
+# quiet mode to reduce terminal output
+/vis/open OGL 800x800-0+0
+/vis/scene/create
+/vis/scene/add/volume   # Add the world volume to the scene
+/vis/sceneHandler/set/style wireframe
+
+#---- Viewpoint and Style ----#
+# Set a good initial viewpoint
+/vis/viewer/set/viewpointThetaPhi 70 20
+/vis/viewer/zoom 1.5
+
+#---- Trajectory Visualization ----#
+# Enable storing trajectories
+/tracking/storeTrajectory 1
+
+# Configure how trajectories are drawn
+/vis/scene/add/trajectories
+/vis/modeling/trajectories/create/default
+/vis/modeling/trajectories/default/setDrawStepPts true
+/vis/modeling/trajectories/default/setStepPtsSize 2
+
+# Draw particles with different colors
+# gamma (green)
+/vis/modeling/trajectories/list G4Track
+/vis/modeling/trajectories/G4Track/set gamma green
+# electrons (red)
+/vis/modeling/trajectories/G4Track/set e- red
+# positrons (blue)
+/vis/modeling/trajectories/G4Track/set e+ blue
+
+#---- Initial Run ----#
+# Display one event to show how it works
+/run/beamOn 1
