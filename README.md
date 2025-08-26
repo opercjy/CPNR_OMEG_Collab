@@ -34,6 +34,7 @@
   * **기본 물리 리스트**: `FTFP_BERT` (범용 물리 모델)
   * **전자기 물리**: `G4EmStandardPhysics_option4` (정밀 저에너지 전자기 상호작용 모델)
   * **특수 물리**: `G4RadioactiveDecayPhysics` (방사성 붕괴)
+  * **특수 물리**: `G4OpticalPhysics` (전자기파 물리)
 
 ### 2.4. 데이터 출력 (Data Output)
 
