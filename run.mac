@@ -1,0 +1,31 @@
+#=======================================================
+# run.mac
+# Batch mode execution script
+#=======================================================
+
+#---- Verbosity Control ----#
+# Set verbosity to minimize unnecessary output
+/run/verbose 0
+/event/verbose 0
+/tracking/verbose 0
+
+#---- Output Filename ----#
+# Set the name for the output ROOT file
+/analysis/setFileName CPNR_OMEG_colab_output.root
+
+#---- Primary Particle Source (GPS) ----#
+# Define the particle as a 60Co ion
+/gps/particle ion
+/gps/ion 27 60 0 0  # Z=27, A=60, Charge=0, Excitation=0
+
+# Confine the source particles to the active source volume
+/gps/pos/type Volume
+/gps/pos/shape Cylinder
+/gps/pos/confine LogicSource  # The name of the logical volume for the 60Co disk
+
+# Set isotropic emission
+/gps/ang/type iso
+
+#---- Start the Run ----#
+# Execute 10,000 events
+/run/beamOn 10000
