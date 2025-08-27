@@ -67,7 +67,7 @@ dnf install -y cmake expat-devel xerces-c-devel libX11-devel libXext-devel libXm
 cd /usr/local/src
 
 # 최신 ROOT 소스 코드 다운로드 및 압축 해제 (버전은 필요에 따라 변경)
-wget [https://root.cern/download/root_v6.32.02.source.tar.gz](https://root.cern/download/root_v6.32.02.source.tar.gz)
+wget [https://root.cern/download/root_v6.36.04.source.tar.gz](https://root.cern/download/root_v6.36.04.source.tar.gz)
 tar -xzvf root_v6.36.04.source.tar.gz
 
 # 빌드 디렉토리 생성 및 빌드
