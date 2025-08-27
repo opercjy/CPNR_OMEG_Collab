@@ -145,7 +145,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
 
   //---- Visualization Attributes ----//
-  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+  logicWorld->SetVisAttributes(new G4VisAttributes(false));
   logicEpoxy->SetVisAttributes(new G4VisAttributes(G4Colour(0.9, 0.9, 0.2, 0.3))); // Yellowish transparent
   logicSource->SetVisAttributes(new G4VisAttributes(G4Colour(0.0, 0.0, 1.0))); // Blue
   logicBottle->SetVisAttributes(new G4VisAttributes(G4Colour(0.8, 0.8, 0.8, 0.3))); // Grey transparent
