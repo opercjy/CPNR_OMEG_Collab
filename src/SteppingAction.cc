@@ -1,4 +1,4 @@
-SteppingAction.cc#include "SteppingAction.hh"
+#include "SteppingAction.hh"
 #include "EventAction.hh"
 #include "DetectorConstruction.hh"
 
