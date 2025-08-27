@@ -1,0 +1,13 @@
+#=======================================================
+# batch_vis.mac - For Batch Mode Visualization
+#=======================================================
+
+/run/initialize
+/vis/open TSG_OFFSCREEN
+/vis/drawVolume
+/vis/viewer/set/viewpointThetaPhi 70 20
+/control/execute source.mac
+/tracking/storeTrajectory 1
+/vis/scene/add/trajectories
+/run/beamOn 1
+/vis/viewer/flush
