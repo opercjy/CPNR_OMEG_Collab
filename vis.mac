@@ -1,0 +1,24 @@
+# 시각화 관련 상세 설정을 담당하는 스크립트
+
+# 최적의 그래픽 드라이버(Qt)를 자동으로 선택하여 창을 엽니다.
+/vis/open
+
+# 지오메트리를 그립니다.
+/vis/drawVolume
+
+# 뷰포인트 및 스타일을 설정합니다.
+/vis/viewer/set/viewpointThetaPhi 70 20
+/vis/viewer/zoom 1.2
+/vis/viewer/set/style wireframe
+/vis/geometry/set/visibility LogicWorld 0 false
+
+# 궤적을 그리도록 설정합니다.
+/tracking/storeTrajectory 1
+/vis/scene/add/trajectories smooth
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/set gamma green
+/vis/modeling/trajectories/drawByParticleID-0/set e- red
+/vis/scene/endOfEventAction accumulate
+
+# 화면에 좌표축을 추가합니다.
+/vis/scene/add/axes
