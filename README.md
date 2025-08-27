@@ -56,7 +56,7 @@
 
 -----
 
-## 4\. 빌드 방법 (Build Instructions) ⚙️
+## 4\. 빌드 방법 (Build Instructions)
 
 1.  **소스 코드 복제 (Clone)**
 
