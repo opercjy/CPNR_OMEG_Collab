@@ -31,7 +31,7 @@ add_executable(CPNR_OMEG_colab CPNR_OMEG_colab.cc ${SOURCES})
 
 # 생성된 실행 파일에 Geant4 라이브러리를 링크합니다.
 # Geant4::Geant4 타겟은 필요한 모든 코어 라이브러리를 포함합니다.
-target_link_libraries(CPNR_OMEG_colab PRIVATE Geant4::Geant4)
+target_link_libraries(CPNR_OMEG_colab PRIVATE ${Geant4_LIBRARIES})
 
 # 생성된 실행 파일에 ROOT 라이브러리를 링크합니다.
 target_link_libraries(CPNR_OMEG_colab PRIVATE ${ROOT_LIBRARIES})
