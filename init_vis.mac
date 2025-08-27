@@ -1,39 +1,36 @@
 #=======================================================
-# init_vis.mac
-# Interactive mode visualization settings
+# init_vis.mac - For CPNR_OMEG_colab Interactive Session
 #=======================================================
 
-#---- Window and Scene Setup ----#
-# quiet mode to reduce terminal output
-/vis/open OGL 800x800-0+0
-/vis/scene/create
-/vis/scene/add/volume   # Add the world volume to the scene
-/vis/sceneHandler/set/style wireframe
+# 1. 초기화
+# /run/initialize 명령어는 main 함수에서 커널 초기화 시 이미 수행되므로,
+# 보통 매크로에서는 생략 가능합니다. 하지만 명시적으로 두어도 문제는 없습니다.
 
-#---- Viewpoint and Style ----#
-# Set a good initial viewpoint
+# 2. 시각화 창 열기
+# /vis/open 명령어에 드라이버 이름을 주지 않으면,
+# 시스템에서 사용 가능한 최적의 드라이버(우리의 경우 Qt)를 자동으로 선택합니다.
+/vis/open
+
+# 3. 지오메트리 그리기
+# 정의된 모든 지오메트리를 화면에 표시합니다.
+/vis/drawVolume
+
+# 4. 뷰포인트 및 스타일 설정
+# 사용자가 보기 편한 각도와 스타일을 지정합니다.
 /vis/viewer/set/viewpointThetaPhi 70 20
-/vis/viewer/zoom 1.5
+/vis/viewer/zoom 1.2
+/vis/viewer/set/style wireframe # 와이어프레임 스타일로 내부가 보이게 함
 
-#---- Trajectory Visualization ----#
-# Enable storing trajectories
+# World 볼륨은 보이지 않도록 설정하여 내부 구조 관찰이 용이하게 함
+/vis/geometry/set/visibility LogicWorld 0 false
+
+# 5. 궤적 및 장식 설정
+# 입자의 이동 경로를 저장하고 화면에 표시하도록 설정합니다.
 /tracking/storeTrajectory 1
+/vis/scene/add/trajectories smooth
+# 한 Run에서 발생하는 모든 이벤트의 궤적을 누적해서 보여줍니다.
+/vis/scene/endOfEventAction accumulate
 
-# Configure how trajectories are drawn
-/vis/scene/add/trajectories
-/vis/modeling/trajectories/create/default
-/vis/modeling/trajectories/default/setDrawStepPts true
-/vis/modeling/trajectories/default/setStepPtsSize 2
-
-# Draw particles with different colors
-# gamma (green)
-/vis/modeling/trajectories/list G4Track
-/vis/modeling/trajectories/G4Track/set gamma green
-# electrons (red)
-/vis/modeling/trajectories/G4Track/set e- red
-# positrons (blue)
-/vis/modeling/trajectories/G4Track/set e+ blue
-
-#---- Initial Run ----#
-# Display one event to show how it works
-/run/beamOn 1
+# 좌표축과 날짜 등 유용한 정보를 화면에 추가합니다.
+/vis/scene/add/axes
+/vis/scene/add/date
