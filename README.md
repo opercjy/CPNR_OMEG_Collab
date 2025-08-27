@@ -93,7 +93,7 @@ source /usr/local/root/bin/thisroot.sh # ROOT 환경을 먼저 활성화
 cmake ../geant4-v11.3.2 \
       -DCMAKE_INSTALL_PREFIX=/usr/local/geant4 \
       -DGEANT4_BUILD_MULTITHREADED=ON \
-      -DGEANT4_USE_QT6=ON \
+      -DGEANT4_USE_QT_QT6=ON \
       -DGEANT4_USE_ROOT=ON \
       -DGEANT4_INSTALL_DATA=ON
 make -j$(nproc)
