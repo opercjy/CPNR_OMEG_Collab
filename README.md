@@ -180,6 +180,7 @@ function rung4() {
     ```bash
     ./CPNR_OMEG_colab
     ```
+<img width="1320" height="1020" alt="image" src="https://github.com/user-attachments/assets/068f96eb-5873-4648-9f70-90e4fcdb9d84" />
 
   * **배치 모드 (계산):**
     `build` 디렉토리에서 `run.mac` 파일을 인자로 실행합니다.
