@@ -1,29 +1,46 @@
-#ifndef PrimaryGeneratorAction_h
-#define PrimaryGeneratorAction_h 1
+// PrimaryGeneratorAction.cc
+// PrimaryGeneratorAction 클래스의 멤버 함수들을 구현합니다.
 
-#include "G4VUserPrimaryGeneratorAction.hh"
-#include "globals.hh"
+#include "PrimaryGeneratorAction.hh"
 
-// G4GeneralParticleSource 클래스를 사용하기 위한 전방 선언
-class G4GeneralParticleSource;
-class G4Event;
+#include "G4Event.hh"
+#include "G4GeneralParticleSource.hh" // GPS 헤더 파일 포함
 
 //______________________________________________________________________________________
-// 각 이벤트의 초기 입자를 생성하는 역할을 담당하는 클래스입니다.
-class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
+/**
+ * @brief 생성자 (Constructor)
+ *
+ * PrimaryGeneratorAction 객체가 생성될 때 호출됩니다.
+ * G4GeneralParticleSource(GPS) 객체를 생성하여 멤버 변수에 할당합니다.
+ */
+PrimaryGeneratorAction::PrimaryGeneratorAction()
+: G4VUserPrimaryGeneratorAction(), fGPS(nullptr)
 {
-public:
-  PrimaryGeneratorAction();
-  virtual ~PrimaryGeneratorAction();
+  fGPS = new G4GeneralParticleSource();
+}
 
-  // Geant4 커널이 매 이벤트 시작 시 호출하는 함수입니다.
-  // 이 함수 안에서 초기 입자를 생성하고 이벤트에 추가합니다.
-  virtual void GeneratePrimaries(G4Event* anEvent) override;
+//______________________________________________________________________________________
+/**
+ * @brief 소멸자 (Destructor)
+ *
+ * PrimaryGeneratorAction 객체가 소멸될 때 호출됩니다.
+ * 생성했던 GPS 객체를 삭제하여 메모리 누수를 방지합니다.
+ */
+PrimaryGeneratorAction::~PrimaryGeneratorAction()
+{
+  delete fGPS;
+}
 
-private:
-  // General Particle Source (GPS) 객체 포인터.
-  // GPS를 사용하면 매크로 파일에서 다양한 소스 설정을 쉽게 할 수 있습니다.
-  G4GeneralParticleSource* fGPS;
-};
-
-#endif
+//______________________________________________________________________________________
+/**
+ * @brief GeneratePrimaries
+ * @param anEvent 현재 이벤트에 대한 정보를 담고 있는 객체 포인터
+ *
+ * 매 이벤트 시작 시 Geant4 커널에 의해 호출됩니다.
+ * GPS가 매크로 파일(.mac)에 정의된 설정에 따라 입자를 생성하여
+ * 현재 이벤트(anEvent)에 주입하는 역할을 합니다.
+ */
+void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
+{
+  fGPS->GeneratePrimaryVertex(anEvent);
+}
