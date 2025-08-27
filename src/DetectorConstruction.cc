@@ -86,7 +86,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // 5-3. PMT 창을 병 바로 아래에 배치
   G4ThreeVector pmtWindowPos(0, 0, -bottle_hz - pmt_window_hz);
-  new G4PVPlacement(0, pmtWindowPos, "PhysPmtWindow", logicPmtWindow, logicWorld, false, 0);
+  new G4PVPlacement(0, pmtWindowPos, logicPmtWindow, "PhysPmtWindow", logicWorld, false, 0);
 
   // 6. 시각화 속성 설정
   logicWorld->SetVisAttributes(new G4VisAttributes(false)); // World는 투명하게
