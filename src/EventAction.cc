@@ -82,18 +82,17 @@ void EventAction::EndOfEventAction(const G4Event* event)
   {
     auto hit = (*hitsCollection)[i];
     
-    // Hits TTree (Ntuple ID=0)에 상세 정보를 저장합니다.
     analysisManager->FillNtupleIColumn(0, 0, eventID);
     analysisManager->FillNtupleIColumn(0, 1, hit->GetTrackID());
-    analysisManager->FillNtupleIColumn(0, 2, hit->GetParentID());
     analysisManager->FillNtupleSColumn(0, 3, hit->GetParticleName());
     analysisManager->FillNtupleSColumn(0, 4, hit->GetProcessName());
-    analysisManager->FillNtupleDColumn(0, 5, hit->GetPosition().x() / mm);
-    analysisManager->FillNtupleDColumn(0, 6, hit->GetPosition().y() / mm);
-    analysisManager->FillNtupleDColumn(0, 7, hit->GetPosition().z() / mm);
-    analysisManager->FillNtupleDColumn(0, 8, hit->GetTime());
-    analysisManager->FillNtupleDColumn(0, 9, hit->GetKineticEnergy());
-    analysisManager->FillNtupleDColumn(0, 10, hit->GetEnergyDeposit());
+    analysisManager->FillNtupleSColumn(0, 5, hit->GetVolumeName()); 
+    analysisManager->FillNtupleDColumn(0, 6, hit->GetPosition().x() / mm);
+    analysisManager->FillNtupleDColumn(0, 7, hit->GetPosition().y() / mm);
+    analysisManager->FillNtupleDColumn(0, 8, hit->GetPosition().z() / mm);
+    analysisManager->FillNtupleDColumn(0, 9, hit->GetTime());
+    analysisManager->FillNtupleDColumn(0, 10, hit->GetKineticEnergy());
+    analysisManager->FillNtupleDColumn(0, 11, hit->GetEnergyDeposit());
     analysisManager->AddNtupleRow(0);
   }
 }
