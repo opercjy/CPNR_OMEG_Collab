@@ -1,8 +1,0 @@
-# ⁶⁰Co 방사성 동위원소 소스를 정의하는 스크립트
-
-/gps/particle ion
-/gps/ion 27 60 0 0
-/gps/pos/type Volume
-/gps/pos/shape Cylinder
-/gps/pos/confine LogicSource
-/gps/ang/type iso
