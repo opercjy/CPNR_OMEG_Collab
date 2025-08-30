@@ -50,6 +50,9 @@ public:
   void SetEnergyDeposit(G4double edep) { fEnergyDeposit = edep; }
   G4double GetEnergyDeposit() const { return fEnergyDeposit; }
 
+  void SetVolumeName(const G4String& name) { fVolumeName = name; }
+  const G4String& GetVolumeName() const { return fVolumeName; } 
+
 private:
   G4int         fTrackID;        // 현재 입자의 트랙 ID
   G4int         fParentID;       // 부모 입자의 트랙 ID
@@ -59,6 +62,7 @@ private:
   G4double      fTime;           // Hit 발생 시간
   G4double      fKineticEnergy;  // Hit 발생 시점의 운동 에너지
   G4double      fEnergyDeposit;  // 해당 스텝에서 잃은 에너지
+  G4String      fVolumeName; // Hit 발생 볼륨 이름
 };
 
 // LSHit 객체들을 담을 컨테이너 타입 정의
