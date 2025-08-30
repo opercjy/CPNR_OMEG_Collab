@@ -133,15 +133,7 @@ make -j$(nproc)
 2.  **`LSDose_1M_events.csv`**:
       * 액체섬광체 영역에 설정된 1mm³ 복셀 격자 각 셀의 **흡수 선량(Dose)** 값이 Gy 단위로 저장됩니다.
 3.  **분석 스크립트**:
-      * `plot_dose.py`: CSV 파일을 읽어 2D 선량 분포도를 생성합니다.
-      * `plot_dose_3d.py`: CSV 파일을 읽어 3D 등고선 선량 분포도를 생성합니다.
-        ```bash
-        # 라이브러리 설치 (최초 1회)
-        pip install pandas matplotlib
-        # 스크립트 실행
-        python3 plot_dose_3d.py
-        ```
-
+      * 선호하는 방법으로 분석
 -----
 
 ## 6\. Geant4 v11 주요 명령어 및 학습 내용
