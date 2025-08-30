@@ -121,15 +121,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
  */
 void DetectorConstruction::ConstructSDandField()
 {
-  // 1. "LSSD"라는 이름으로 Sensitive Detector 객체를 생성합니다.
-  LSSD* lsSD = new LSSD("LSSD");
-  
-  // 2. Geant4의 SD 관리자(SDManager)에 생성한 SD를 등록합니다.
-  G4SDManager::GetSDMpointer()->AddNewDetector(lsSD);
+    // 1. "LSSD"라는 이름으로 Sensitive Detector 객체를 생성합니다.
+  LSSD* commonSD = new LSSD("LSSD");
+  G4SDManager::GetSDMpointer()->AddNewDetector(commonSD);
 
-  // 3. "LogicLS"라는 이름을 가진 논리 볼륨에 등록된 SD를 연결(부착)합니다.
-  //    이제부터 "LogicLS" 내부에서 일어나는 모든 스텝은 lsSD에 의해 감지됩니다.
-  SetSensitiveDetector("LogicLS", lsSD);
+  // 2. 이 SD를 여러 논리 볼륨에 공통으로(common) 부착합니다.
+  SetSensitiveDetector("LogicLS", commonSD);
+  SetSensitiveDetector("LogicPmtWindow", commonSD); // PMT 윈도우에도 동일한 SD 부착
 }
 
 /**
