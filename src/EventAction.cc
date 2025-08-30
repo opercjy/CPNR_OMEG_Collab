@@ -1,42 +1,99 @@
 #include "EventAction.hh"
 #include "G4AnalysisManager.hh"
 #include "G4Event.hh"
+#include "G4HCofThisEvent.hh"
+#include "G4SDManager.hh"
+#include "LSHit.hh"
+#include "G4SystemOfUnits.hh"
 
-//______________________________________________________________________________________
-EventAction::EventAction()
-: G4UserEventAction(), fEdep(0.)
-{}
+// std::set을 사용하여 중복된 트랙을 효율적으로 제거하기 위해 헤더를 포함합니다.
+#include <set>
 
-//______________________________________________________________________________________
-EventAction::~EventAction()
-{}
+/**
+ * @brief 생성자
+ */
+EventAction::EventAction() : G4UserEventAction() {}
 
-//______________________________________________________________________________________
-// 새 이벤트가 시작될 때마다 에너지 누적 변수를 0으로 초기화합니다.
-// 이렇게 하지 않으면 이전 이벤트의 에너지가 계속 더해지게 됩니다.
-void EventAction::BeginOfEventAction(const G4Event* /*event*/)
-{
-  fEdep = 0.;
-}
+/**
+ * @brief 소멸자
+ */
+EventAction::~EventAction() {}
 
-//______________________________________________________________________________________
-// 이벤트가 끝나면, 누적된 에너지(fEdep)를 G4AnalysisManager를 통해 N-tuple에 저장합니다.
+/**
+ * @brief 각 이벤트가 끝날 때마다 호출되는 함수입니다.
+ * @param event 현재 이벤트에 대한 정보를 담고 있는 G4Event 객체 포인터
+ *
+ * 이 함수는 LSSD에서 수집된 HitsCollection을 분석하여,
+ * 1) 이벤트 요약 정보(입자 수)를 계산하여 'EventSummary' TTree에 저장하고,
+ * 2) 각 Hit의 상세 정보를 'Hits' TTree에 저장하는 두 가지 핵심 역할을 수행합니다.
+ */
 void EventAction::EndOfEventAction(const G4Event* event)
 {
   auto analysisManager = G4AnalysisManager::Instance();
-  
-  // N-tuple의 각 컬럼에 값을 채워넣습니다. 컬럼 ID는 RunAction에서 정의한 순서입니다.
-  analysisManager->FillNtupleIColumn(0, event->GetEventID()); // 0번 컬럼: eventID
-  analysisManager->FillNtupleDColumn(1, fEdep);               // 1번 컬럼: edepLS
-  
-  // 채워진 한 줄의 데이터를 N-tuple에 추가합니다.
-  analysisManager->AddNtupleRow();
-}
+  G4int eventID = event->GetEventID();
 
-//______________________________________________________________________________________
-// 이 함수는 SteppingAction에서 호출됩니다.
-// 스텝에서 발생한 에너지를 멤버 변수 fEdep에 더합니다.
-void EventAction::AddEdep(G4double edep)
-{
-    fEdep += edep;
+  // "LSHitsCollection"이라는 이름으로 등록된 Hits Collection의 ID를 가져옵니다.
+  G4int hcID = G4SDManager::GetSDMpointer()->GetCollectionID("LSHitsCollection");
+  if (hcID < 0) return; // 해당 Collection이 없으면 함수 종료
+
+  // ID를 이용해 실제 Hits Collection 객체를 가져옵니다.
+  auto hitsCollection = static_cast<LSHitsCollection*>(event->GetHCofThisEvent()->GetHC(hcID));
+  // Collection이 비어있으면 (즉, 이번 이벤트에서 LS 내에 hit이 없었으면) 함수 종료
+  if (!hitsCollection || hitsCollection->entries() == 0) return;
+
+
+  // --- 1. 이벤트 요약 정보 계산 및 저장 ('EventSummary' TTree) ---
+  G4int primaryCount = 0;
+  G4int secondaryCount = 0;
+  // 한 이벤트 내에서 동일한 입자가 여러 번 hit을 남겨도 한 번만 세기 위해,
+  // 이미 계산한 트랙의 ID를 저장하는 set을 사용합니다.
+  std::set<G4int> countedTracks;
+
+  // 이번 이벤트의 모든 Hit을 분석하여 LS에 들어온 입자 수를 셉니다.
+  for (size_t i = 0; i < hitsCollection->entries(); ++i)
+  {
+    auto hit = (*hitsCollection)[i];
+    G4int trackID = hit->GetTrackID();
+
+    // 해당 트랙을 처음 발견한 경우에만 계수합니다.
+    if (countedTracks.find(trackID) == countedTracks.end())
+    {
+      countedTracks.insert(trackID); // 이 트랙은 이제 계산되었다고 표시
+
+      // ParentID가 0이면 최초 입자(primary), 아니면 2차 입자(secondary)로 간주합니다.
+      if (hit->GetParentID() == 0) {
+        primaryCount++;
+      } else {
+        secondaryCount++;
+      }
+    }
+  }
+
+  // 계산된 요약 정보를 EventSummary TTree (Ntuple ID=1)에 저장합니다.
+  // FillNtupleIColumn(NtupleID, ColumnID, value)
+  analysisManager->FillNtupleIColumn(1, 0, eventID);
+  analysisManager->FillNtupleIColumn(1, 1, primaryCount);
+  analysisManager->FillNtupleIColumn(1, 2, secondaryCount);
+  analysisManager->AddNtupleRow(1);
+
+
+  // --- 2. 개별 Hit 상세 정보 저장 ('Hits' TTree) ---
+  for (size_t i = 0; i < hitsCollection->entries(); ++i)
+  {
+    auto hit = (*hitsCollection)[i];
+    
+    // Hits TTree (Ntuple ID=0)에 상세 정보를 저장합니다.
+    analysisManager->FillNtupleIColumn(0, 0, eventID);
+    analysisManager->FillNtupleIColumn(0, 1, hit->GetTrackID());
+    analysisManager->FillNtupleIColumn(0, 2, hit->GetParentID());
+    analysisManager->FillNtupleSColumn(0, 3, hit->GetParticleName());
+    analysisManager->FillNtupleSColumn(0, 4, hit->GetProcessName());
+    analysisManager->FillNtupleDColumn(0, 5, hit->GetPosition().x() / mm);
+    analysisManager->FillNtupleDColumn(0, 6, hit->GetPosition().y() / mm);
+    analysisManager->FillNtupleDColumn(0, 7, hit->GetPosition().z() / mm);
+    analysisManager->FillNtupleDColumn(0, 8, hit->GetTime());
+    analysisManager->FillNtupleDColumn(0, 9, hit->GetKineticEnergy());
+    analysisManager->FillNtupleDColumn(0, 10, hit->GetEnergyDeposit());
+    analysisManager->AddNtupleRow(0);
+  }
 }
