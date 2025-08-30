@@ -1,0 +1,68 @@
+# =============================================================
+# init_vis_voxel.mac (시각화 모드용 최종 스크립트)
+# =============================================================
+
+# 1. 시각화 환경 설정
+# -------------------------------------------------------------
+# 입자의 궤적(Trajectory)을 메모리에 저장하도록 활성화합니다.
+# 이 명령이 없으면 입자가 보이지 않습니다.
+/tracking/storeTrajectory 1
+
+# 그래픽 창을 엽니다.
+/vis/open
+
+# DetectorConstruction에서 정의한 지오메트리를 그립니다.
+/vis/drawVolume
+
+# 카메라 각도와 줌 레벨을 설정합니다.
+/vis/viewer/set/viewpointThetaPhi 70 20
+/vis/viewer/zoom 1.2
+
+# 궤적을 화면에 그리도록 하고, 이벤트가 끝날 때마다 화면을 지우지 않고 누적시킵니다.
+/vis/scene/add/trajectories
+/vis/scene/endOfEventAction accumulate
+
+# 2. 커널 초기화
+# -------------------------------------------------------------
+# 물리 프로세스 관련 명령어는 반드시 커널 초기화 이후에 실행해야 합니다.
+/run/initialize
+
+# 3. 방사성 붕괴 물리 프로세스 설정
+# -------------------------------------------------------------
+# Geant4 v11.2부터 반감기 1년 이상 핵종은 붕괴하지 않으므로,
+# 임계값을 매우 큰 값으로 설정하여 Co-60(5.27년)이 붕괴되도록 합니다.
+/process/had/rdm/thresholdForVeryLongDecayTime 1.0e+60 year
+
+# 붕괴 계산을 Co-60 핵종에만 한정하여 시뮬레이션 효율을 높입니다.
+/process/had/rdm/nucleusLimits 60 60 27 27
+
+# 4. 복셀화 선량계산(Scoring Mesh) 시각화
+# -------------------------------------------------------------
+# C++ 코드에서 활성화된 스코어링 기능을 사용합니다.
+/score/create/boxMesh LSDoseMesh
+/score/mesh/boxSize 52. 52. 90. mm
+/score/mesh/nBin 52 52 90
+/score/quantity/doseDeposit dose
+/score/close
+
+# 에너지가 흡수된 위치(hit)를 화면에 점으로 표시합니다.
+# 스코어링 메쉬가 활성화된 경우, 각 복셀의 hit을 시각화합니다.
+/vis/scene/add/hits
+
+# 5. 범용 입자 소스 (GPS) 설정
+# -------------------------------------------------------------
+/gps/particle ion
+/gps/ion 27 60 0 0
+/gps/ang/type iso
+
+# 소스의 위치와 모양을 DetectorConstruction.cc 코드와 정확히 일치시킵니다.
+/gps/pos/type Volume
+/gps/pos/shape Cylinder
+/gps/pos/centre 0. 0. 154.0 mm
+/gps/pos/radius 5. mm
+/gps/pos/halfz 0.5 mm
+
+# 6. 시뮬레이션 실행
+# -------------------------------------------------------------
+# 시각적 확인을 위해 100개의 이벤트를 실행합니다.
+/run/beamOn 100
