@@ -1,152 +1,56 @@
 
------
-
-# CPNR-OMEG-colab: ⁶⁰Co 선원 기반 액체섬광체 검출기 Geant4 시뮬레이션 (광전증배관 및 광학 모형 제외된 고에너지 물리 모델) 
+# CPNR-OMEG-colab: ⁶⁰Co 선원 기반 액체섬광체 검출기 Geant4 시뮬레이션 (알파버전, 광학/광전증배관 모델 미구현)
 
 ## 1. 개요 (Overview)
 
-본 프로젝트는 ⁶⁰Co (코발트-60) 감마선 교정 선원을 이용한 액체섬광체 검출 시스템의 응답 특성을 평가하기 위한 Geant4 시뮬레이션입니다. 에폭시에 봉인된 디스크 형태의 선원, 100ml 듀란(Duran) 병에 담긴 LAB 기반 액체섬광체, 그리고 Hamamatsu PMT로 구성된 전체 검출기 시스템에서 방사선의 수송 및 에너지 전달을 전산모사합니다.
+본 프로젝트는 ⁶⁰Co (코발트-60) 감마선 교정 선원을 이용한 액체섬광체(LS) 검출 시스템의 응답 특성을 평가하기 위한 Geant4 시뮬레이션입니다. 이 프로젝트는 Geant4의 고급 기능을 활용하여 두 가지 주요 방식으로 데이터를 출력하도록 설계되었습니다.
 
-## 2. 시뮬레이션 명세 (Simulation Specification)
+1.  **정밀 이벤트 데이터 (Detailed Event Data):** LS 검출기 내에서 발생하는 모든 물리적 상호작용(hit)에 대한 상세 정보(입자 종류, 운동량, 에너지 손실, 생성 프로세스 등)를 TTree 형태로 저장합니다. 이는 `G4VSensitiveDetector`와 `G4VHit` 클래스를 통해 구현됩니다.
+2.  **복셀화 선량 데이터 (Voxelized Dose Data):** LS 검출기 영역을 사용자가 정의한 3차원 격자(복셀, Voxel)로 나누고, 각 복셀에 흡수된 평균 선량(Dose)을 CSV 파일로 저장합니다. 이 기능은 Geant4에 내장된 `G4ScoringManager`를 통해 구현됩니다.
 
-* **방사선원**: 에폭시(Ø30mm, t=5mm) 중앙에 봉인된 ⁶⁰Co 활성 디스크(Ø10mm, t=1mm)
-* **물리 프로세스**: `G4RadioactiveDecayPhysics`를 포함한 `FTFP_BERT` or `Sheild` 기반 물리 리스트
-* **데이터 출력**: ROOT TTree (`.root` 파일), 액체섬광체 내 에너지 축적량 기록
 
 ---
-## 3. 실행 환경: Docker 기반의 표준화된 개발 환경 (선택)
+## 2. 기술 스택 및 물리 모델
 
-이 프로젝트는 다양한 리눅스 배포판에서 발생할 수 있는 시스템 라이브러리(`libc`) 버전 충돌 문제를 원천적으로 방지하고, 어떤 컴퓨터에서든 100% 동일한 결과를 보장하기 위해 **Docker 컨테이너 환경에서 빌드하고 실행하는 것을 표준으로 합니다.**
-**물론 libc 버전 충돌이 없다면 컨테이너 기술을 적용안해도 무방 합니다.** 
-
-### 3.1. 왜 Docker를 사용해야 하는가?
-
-최신 Geant4와 ROOT를 구형 OS나 특정 라이브러리 버전을 사용하는 시스템에서 직접 빌드할 경우, 예측하기 어려운 `Segmentation Fault`와 같은 충돌이 발생할 수 있습니다. 저희는 이 문제를 해결하기 위해, 모든 개발 도구와 라이브러리가 완벽하게 갖춰진 격리된 OS 환경을 Docker 컨테이너 기술을 통해 구축했습니다. 이 방법을 통해 학문후속세대의 소중한 시간을 디버깅이 아닌 연구 자체에 집중할 수 있습니다.
-
-### 3.2. 요구사항 (Prerequisites)
-
-* **Docker**: 시스템에 설치되어 있어야 합니다.
-* **X11 서버**: GUI 모드로 시뮬레이션을 시각화하려면 필요합니다. (Windows에서는 Xming, VcXsrv 등, macOS에서는 XQuartz 설치)
+* **시뮬레이션**: Geant4 (v11.3)
+* **데이터 분석**: ROOT
+* **언어**: C++17
+* **빌드**: CMake
+* **물리 리스트**: `G4VModularPhysicsList`를 상속받는 사용자 정의 물리 리스트(Custom Physics List)를 사용합니다. 이는 `Shielding`과 같은 표준 리스트를 직접 사용하는 것보다 제어가 명확하고, UI 명령어 충돌과 같은 예기치 않은 문제를 방지하는 데 유리합니다. 포함된 주요 모듈은 다음과 같습니다.
+    * `G4EmStandardPhysics` (전자기 상호작용)
+    * `G4RadioactiveDecayPhysics` (방사성 붕괴, UI 명령어 활성화)
+    * `G4DecayPhysics` (일반 입자 붕괴)
+    * `G4HadronPhysicsFTFP_BERT_HP` (고정밀 중성자 모델을 포함한 강입자 상호작용)
+    * `G4IonPhysics` 및 `G4StoppingPhysics`
 
 ---
-### 3.3. Docker 개발 환경 구축
+## 3. 실행 환경: Docker 기반 표준화
 
-물리 연구 커뮤니티에서는 RHEL 계열(Rocky/Alma Linux)과 데비안 계열(Ubuntu)이 널리 사용됩니다. 두 가지 방식 모두를 안내합니다.
+라이브러리 버전 충돌을 원천적으로 방지하고 완벽한 재현성을 보장하기 위해, **Docker 컨테이너 환경에서 빌드하고 실행하는 것을 표준으로 합니다.**
 
-#### **방법 A: AlmaLinux 9 기반으로 직접 환경 구축하기 (가장 확실하고 추천하는 방법)**
+### 3.1. 최초 1회 환경 구축
 
-이 방법은 Rocky Linux 9와 거의 동일한 AlmaLinux 9 환경에서 Geant4와 ROOT를 직접 소스 코드로 빌드하여, 우리 프로젝트만을 위한 완벽한 맞춤형 환경을 만드는 과정입니다.
+**1) Docker 이미지 생성:** 이 저장소의 지침에 따라 Geant4와 ROOT를 소스 빌드한 컨테이너를 `my-g4-env:1.0`이라는 이미지로 저장합니다. 이 과정은 최초 한 번만 수행하면 됩니다.
 
-***3.3.1. AlmaLinux 9 컨테이너 시작**
-```bash
-# 프로젝트 폴더로 이동 후, 아래 명령어로 컨테이너 시작
-# --name 옵션으로 컨테이너에 g4dev 라는 이름을 부여합니다.
-docker run -it --name g4dev -v "$(pwd)":/work -w /work almalinux:9 bash
-````
-
-**3.3.2. 컨테이너 내부에서 필수 패키지 설치**
-컨테이너 터미널(`[root@... work]#`) 안에서 아래 명령어를 실행하여 모든 개발 도구와 라이브러리를 설치합니다.
+**2) 호스트 머신에 Helper 함수 추가:** 편의를 위해 아래 함수를 **호스트 머신(로컬 PC)**의 `~/.bashrc` 또는 `.zshrc` 파일에 추가합니다. 이 함수는 X11 GUI 포워딩 및 관련 오류를 자동으로 처리합니다.
 
 ```bash
-# 시스템 업데이트 및 기본 개발 도구 설치
-dnf update -y
-dnf groupinstall "Development Tools" -y
-dnf install -y epel-release
-dnf config-manager --set-enabled crb
-
-# Geant4와 ROOT 빌드에 필요한 모든 라이브러리 설치
-dnf install -y cmake expat-devel xerces-c-devel libX11-devel libXext-devel libXmu-devel \
-               libXpm-devel libXft-devel mesa-libGL-devel mesa-libGLU-devel \
-               qt6-qtbase-devel 'qt6-*-devel' python3-devel openssl-devel
-```
-
-**3.3.3. ROOT 소스 코드 빌드 및 설치** 
-
-```bash
-# 소스 코드를 받을 디렉토리로 이동
-cd /usr/local/src
-
-# 최신 ROOT 소스 코드 다운로드 및 압축 해제 (버전은 필요에 따라 변경)
-wget [https://root.cern/download/root_v6.36.04.source.tar.gz](https://root.cern/download/root_v6.36.04.source.tar.gz)
-tar -xzvf root_v6.36.04.source.tar.gz
-
-# 빌드 디렉토리 생성 및 빌드
-mkdir root_build && cd root_build
-cmake ../root-6.36.04 -DCMAKE_INSTALL_PREFIX=/usr/local/root -Dall=ON
-make -j$(nproc)
-make install
-```
-
-**3.3.4. Geant4 소스 코드 빌드 및 설치**
-
-```bash
-# 소스 코드 디렉토리로 다시 이동
-cd /usr/local/src
-
-# Geant4 소스 코드 다운로드 및 압축 해제
-wget [https://geant4-data.web.cern.ch/geant4-data/releases/geant4-v11.2.1.tar.gz](https://geant4-data.web.cern.ch/geant4-data/releases/geant4-v11.2.1.tar.gz)
-tar -xzvf geant4-v11.3.2.tar.gz
-
-# 빌드 디렉토리 생성 및 빌드
-mkdir geant4_build && cd geant4_build
-source /usr/local/root/bin/thisroot.sh # ROOT 환경을 먼저 활성화
-cmake ../geant4-v11.3.2 \
-      -DCMAKE_INSTALL_PREFIX=/usr/local/geant4 \
-      -DGEANT4_BUILD_MULTITHREADED=ON \
-      -DGEANT4_USE_QT_QT6=ON \
-      -DGEANT4_USE_ROOT=ON \
-      -DGEANT4_INSTALL_DATA=ON
-make -j$(nproc)
-make install
-```
-
-**3.3.5. 완성된 환경을 새 이미지로 저장 (매우 중요)**
-모든 설치가 완료되면, `exit`으로 컨테이너를 종료합니다. 그 다음, **호스트 머신의 새 터미널 창**에서 아래 명령어를 실행하여 지금까지의 모든 작업 내용을 `my-g4-env:1.0`이라는 새로운 이미지로 저장합니다.
-
-```bash
-docker commit g4dev my-g4-env:1.0
-```
-
-이제부터는 위반복적 설치 과정을 반복할 필요 없이, `my-g4-env:1.0` 이미지 하나로 언제든지 동일한 환경을 불러올 수 있습니다.
-
-#### **방법 B: 우분투 기반의 미리 빌드된 이미지 사용하기 (가장 빠른 방법)**
-
-과학 커뮤니티에서 널리 사용되는 우분투 기반의 Geant4 이미지를 사용하면 설치 과정을 생략하고 바로 시뮬레이션을 실행할 수 있습니다.
-
-```bash
-# 1. 이미지 내려받기
-docker pull geant4/geant4:latest
-
-# 2. 컨테이너 실행 (이미지 이름만 다름)
-# 프로젝트 폴더에서 아래 명령어 실행
-docker run -it --rm -v "$(pwd)":/work -w /work geant4/geant4:latest bash
-
-# 3. 컨테이너 내부에서 환경 설정 후 바로 빌드
-source /usr/local/geant4/bin/geant4.sh
-source /usr/local/root/bin/thisroot.sh
-mkdir build && cd build
-cmake ..
-make -j$(nproc)
-```
-
-## 4\. 빌드 및 실행 방법
-
-### 4.1. `.bashrc`에 Helper 함수 추가 (최초 1회)
-
-편의를 위해 아래 함수를 호스트 머신의 `~/.bashrc` 파일 맨 아래에 추가합니다.
-
-```bash
-# Geant4 개발용 Docker 컨테이너를 실행하는 함수
+# Geant4 개발용 Docker 컨테이너를 실행하는 함수 (최종 수정 버전)
 function rung4() {
     local image_name=${1:-"my-g4-env:1.0"}
     echo "Starting container with image: ${image_name}"
-    
-    # GUI 앱 실행을 위한 X11 포워딩 설정
+
     xhost +
-    
+
+    local runtime_dir="/tmp/runtime-$(id -u)"
+    mkdir -p "${runtime_dir}"
+    chmod 0700 "${runtime_dir}"
+
     docker run -it --rm \
         -e DISPLAY=$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -e XDG_RUNTIME_DIR="${runtime_dir}" \
+        -v "${runtime_dir}":"${runtime_dir}" \
         --name g4dev \
         -v "$(pwd)":/work \
         -w /work \
@@ -154,52 +58,105 @@ function rung4() {
 }
 ```
 
-추가 후 `source ~/.bashrc` 명령어로 적용합니다.
+추가 후 `source ~/.bashrc` 명령어로 적용하거나 새 터미널을 엽니다.
 
-### 4.2. 빌드 (최초 1회)
+### 3.2. 컨테이너 환경 변수 영구 설정 (선택 사항)
 
-1.  프로젝트 최상위 디렉토리에서 컨테이너를 시작합니다.
-    ```bash
-    rung4
-    ```
-2.  컨테이너 내부에서 환경 변수를 설정하고 빌드를 진행합니다.
-    ```bash
-    source /usr/local/geant4/bin/geant4.sh
-    source /usr/local/root/bin/thisroot.sh
-    mkdir build
-    cd build
-    cmake ..
-    make -j$(nproc)
-    ```
+매번 컨테이너에 접속할 때마다 `source` 명령어를 입력하는 것이 번거롭다면, **컨테이너 내부의** `~/.bashrc` 파일에 환경 변수를 미리 등록해두는 것이 편리합니다.
 
-### 4.3. 실행
+```bash
+# rung4 명령으로 컨테이너에 접속한 뒤, 아래 명령어들을 실행
+echo '' >> ~/.bashrc
+echo '# Auto-load Geant4 and ROOT environments' >> ~/.bashrc
+echo 'source /usr/local/geant4/bin/geant4.sh' >> ~/.bashrc
+echo 'source /usr/local/root/bin/thisroot.sh' >> ~/.bashrc
+```
 
-  * **GUI 모드 (인터랙티브):**
-    `build` 디렉토리에서 인자 없이 실행합니다.
-
-    ```bash
-    ./CPNR_OMEG_colab
-    ```
-<img width="1320" height="1020" alt="image" src="https://github.com/user-attachments/assets/068f96eb-5873-4648-9f70-90e4fcdb9d84" />
-
-  * **배치 모드 (계산):**
-    `build` 디렉토리에서 `run.mac` 파일을 인자로 실행합니다.
-
-    ```bash
-    ./CPNR_OMEG_colab ../run.mac
-    ```
+이렇게 설정하면, 다음부터 컨테이너에 접속할 때 Geant4와 ROOT 환경이 자동으로 활성화됩니다.
 
 -----
 
-## 5\. 디버깅 기록 (Troubleshooting)
+## 4\. 빌드 및 실행 방법
 
-이 프로젝트를 빌드하는 과정에서 몇 가지 중요한 문제들을 해결했습니다.
+### 4.1. 빌드 (최초 또는 코드 수정 시)
 
-  * **시스템 `libc` 충돌**: 초기 Rocky Linux 9 환경에서 Geant4 최신 버전과 라이브러리 충돌로 인한 `segmentation fault`가 지속적으로 발생하여 Docker 환경으로 전환했습니다.
-  * **CMake 설정**: Geant4 라이브러리가 Qt 지원을 포함하여 올바르게 빌드되었음에도 불구하고, 사용자 프로젝트에서 GUI가 활성화되지 않는 문제가 있었습니다. 이는 `CMakeLists.txt`가 Geant4의 컴파일 옵션(`-DG4UI_USE`)을 제대로 상속받지 못했기 때문이며, `include(${Geant4_USE_FILE})`과 `${Geant4_LIBRARIES}`를 사용하는 호환성 높은 스크립트로 최종 수정하여 해결했습니다.
-  * **Docker X11 포워딩**: 컨테이너의 GUI를 호스트 화면에 표시하기 위해 `xhost +` 설정과 `docker run` 명령어에 `-e DISPLAY` 및 `-v /tmp/.X11-unix` 옵션을 추가했습니다.
+** 중요:** C++ 헤더(`*.hh`) 파일을 수정하거나 `CMakeLists.txt`를 변경하는 등 프로젝트 구조에 중요한 변경이 있을 경우, 기존 `build` 디렉토리를 완전히 삭제하고 새로 빌드하는 \*\*클린 빌드(Clean Build)\*\*를 강력히 권장합니다. 이는 오래된 컴파일 결과물(`.o` 파일)과의 예측 불가능한 충돌을 방지하는 가장 확실한 방법입니다.
+
+```bash
+# 1. 프로젝트 최상위 디렉토리로 이동
+cd /path/to/CPNR-OMEG-colab
+
+# 2. 기존 빌드 디렉토리 삭제 (클린 빌드를 위해)
+rm -rf build
+
+# 3. 새 빌드 디렉토리 생성 및 이동
+mkdir build && cd build
+
+# 4. rung4 함수로 컨테이너 시작
+rung4
+
+# 5. 컨테이너 내부에서 빌드
+# (만약 3.2 단계를 수행했다면 아래 source 명령어들은 생략 가능)
+source /usr/local/geant4/bin/geant4.sh
+source /usr/local/root/bin/thisroot.sh
+cmake ..
+make -j$(nproc)
+```
+
+### 4.2. 실행
+
+#### GUI 모드 (시각화 및 디버깅)
+
+`build` 디렉토리에서 인자 없이 실행합니다. `CPNR_OMEG_colab.cc`에 설정된 `init_vis_voxel.mac`이 자동으로 실행되어, 입자 트랙과 복셀화된 선량 분포를 시각적으로 확인할 수 있습니다.
+
+```bash
+./CPNR_OMEG_colab
+```
+
+#### 배치 모드 (대량 계산)
+
+`build` 디렉토리에서 `run_voxel.mac` 파일을 인자로 실행합니다. GUI 없이 터미널에서만 계산이 진행됩니다.
+
+```bash
+./CPNR_OMEG_colab ../run_voxel.mac
+```
+
+-----
+
+## 5\. 데이터 출력 및 분석
+
+실행 후 `build` 디렉토리에 다음 결과 파일들이 생성됩니다.
+
+1.  **`CPNR_OMEG_colab_voxel.root`**:
+      * **`Hits` (TTree):** 액체섬광체 내의 모든 에너지 손실(step)에 대한 상세 정보가 저장됩니다.
+      * **`EventSummary` (TTree):** 각 이벤트별로 액체섬광체에 들어온 1차/2차 입자의 총 개수가 저장됩니다.
+2.  **`LSDose_1M_events.csv`**:
+      * 액체섬광체 영역에 설정된 1mm³ 복셀 격자 각 셀의 **흡수 선량(Dose)** 값이 Gy 단위로 저장됩니다.
+3.  **분석 스크립트**:
+      * `plot_dose.py`: CSV 파일을 읽어 2D 선량 분포도를 생성합니다.
+      * `plot_dose_3d.py`: CSV 파일을 읽어 3D 등고선 선량 분포도를 생성합니다.
+        ```bash
+        # 라이브러리 설치 (최초 1회)
+        pip install pandas matplotlib
+        # 스크립트 실행
+        python3 plot_dose_3d.py
+        ```
+
+-----
+
+## 6\. Geant4 v11 주요 명령어 및 학습 내용
+
+본 프로젝트를 진행하며 확인된 Geant4 최신 버전(v11.x)의 주요 명령어 및 특징은 다음과 같습니다.
+
+  * **방사성 붕괴 임계값**: Geant4 v11.2부터 반감기가 **1년 이상**인 핵종은 계산 효율을 위해 기본적으로 붕괴하지 않도록 변경되었습니다. Co-60(반감기 5.27년)과 같은 장수명 핵종을 시뮬레이션하려면, 매크로에서 반드시 다음 명령어를 `/run/initialize` **이후에** 실행해야 합니다.
+
+      * `/process/had/rdm/thresholdForVeryLongDecayTime 1.0e+60 year`
+
+  * **방사성 붕괴 명령어 경로**: Geant4 v11.0부터 기존의 `/grdm/` 명령어는 **완전히 제거**되고, `/process/had/rdm/` 경로가 유일한 표준이 되었습니다.
+
+  * **스코어링 메쉬 명령어**: 복셀화(`Scoring Mesh`) 관련 명령어는 버전에 따라 문법이 다를 수 있습니다. v11.3 기준, 필터 적용 방식은 다음과 같습니다.
+
+    1.  필터 생성: `/score/filter/volumeFilter <필터이름> <논리볼륨이름>`
+    2.  필터 적용: `/score/quantity/doseDeposit <데이터이름> <필터이름>`
 
 <!-- end list -->
-
-
-
