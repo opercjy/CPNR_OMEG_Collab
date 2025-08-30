@@ -14,18 +14,19 @@ RunAction::RunAction() : G4UserRunAction()
   analysisManager->SetNtupleMerging(true); // MT 모드에서 각 스레드의 결과를 병합
 
   // --- N-tuple ID = 0: Hits TTree ---
-  analysisManager->CreateNtuple("Hits", "Hit-by-hit data in LS");
+  analysisManager->CreateNtuple("Hits", "Hit-by-hit data");
   analysisManager->CreateNtupleIColumn("eventID");      // 0
   analysisManager->CreateNtupleIColumn("trackID");      // 1
   analysisManager->CreateNtupleIColumn("parentID");     // 2
   analysisManager->CreateNtupleSColumn("particleName"); // 3
   analysisManager->CreateNtupleSColumn("processName");  // 4
-  analysisManager->CreateNtupleDColumn("x_mm");         // 5
-  analysisManager->CreateNtupleDColumn("y_mm");         // 6
-  analysisManager->CreateNtupleDColumn("z_mm");         // 7
-  analysisManager->CreateNtupleDColumn("time_ns");      // 8
-  analysisManager->CreateNtupleDColumn("kineticEnergy_MeV"); // 9
-  analysisManager->CreateNtupleDColumn("energyDeposit_MeV"); // 10
+  analysisManager->CreateNtupleSColumn("volumeName");   // 5
+  analysisManager->CreateNtupleDColumn("x_mm");         // 6
+  analysisManager->CreateNtupleDColumn("y_mm");         // 7
+  analysisManager->CreateNtupleDColumn("z_mm");         // 8
+  analysisManager->CreateNtupleDColumn("time_ns");      // 9
+  analysisManager->CreateNtupleDColumn("kineticEnergy_MeV"); // 10
+  analysisManager->CreateNtupleDColumn("energyDeposit_MeV"); // 11
   analysisManager->FinishNtuple();
 
   // --- N-tuple ID = 1: EventSummary TTree ---
