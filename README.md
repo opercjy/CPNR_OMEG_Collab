@@ -112,6 +112,8 @@ make -j$(nproc)
 ```bash
 ./CPNR_OMEG_colab
 ```
+<img width="1320" height="1020" alt="image" src="https://github.com/user-attachments/assets/00954820-7434-4415-b942-75a969ccbe22" />
+<img width="1320" height="1020" alt="image" src="https://github.com/user-attachments/assets/5d411503-18cf-415d-a784-2fe6bd040c83" />
 
 #### 배치 모드 (대량 계산)
 
@@ -133,7 +135,84 @@ make -j$(nproc)
 2.  **`LSDose_1M_events.csv`**:
       * 액체섬광체 영역에 설정된 1mm³ 복셀 격자 각 셀의 **흡수 선량(Dose)** 값이 Gy 단위로 저장됩니다.
 3.  **분석 스크립트**:
-      * 연구자가 선호나는 도구와 방법론 선택하여 분석
+      * 연구자가 선호나는 도구와 방법론 선택하여 분석, 에를 들면 python 선호 하는 경우 다음을 참조
+      * ```python
+        import numpy as np
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import LogNorm
+        # --- 설정값 ---
+        CSV_FILENAME = 'LSDose_1M_events.csv'
+        OUTPUT_FILENAME = 'dose_maps_2D_advanced.png'
+        VOXEL_SIZE_MM = 0.5
+        # --- 데이터 불러오기 및 3D 그리드 생성 (이전과 동일) ---
+        print(f"'{CSV_FILENAME}' 파일을 읽는 중입니다...")
+        data = np.loadtxt(CSV_FILENAME, delimiter=',', comments='#')
+        data = data[data[:, 3] > 0]
+        print("데이터를 성공적으로 불러왔습니다.")
+
+        nx, ny, nz = 104, 104, 180
+        dose_grid_nGy = np.zeros((nx, ny, nz))
+
+        for row in data:
+           ix, iy, iz = int(row[0]), int(row[1]), int(row[2])
+           dose_gy = row[3]
+           if 0 <= ix < nx and 0 <= iy < ny and 0 <= iz < nz:
+              dose_grid_nGy[ix, iy, iz] = dose_gy * 1e9 # Gy를 nGy로 변환
+
+         print("3D 선량 그리드(nGy)를 생성했습니다.")
+
+         # --- 시각화 설정 수정 ---
+        # 1. nipy_spectral 컬러맵을 가져오고, 값이 없는(NaN) 부분은 흰색으로 처리하도록 설정합니다.
+        cmap = plt.get_cmap("nipy_spectral")
+        cmap.set_bad(color='white')
+
+        # 2. 로그 스케일 컬러바를 위한 Normalizer를 생성합니다.
+        #    최솟값은 0이 아닌 값 중 가장 작은 값으로, 최댓값은 전체 최댓값으로 설정합니다.
+        vmin = dose_grid_nGy[dose_grid_nGy > 0].min()
+        vmax = dose_grid_nGy.max()
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+
+        # --- 2D 단면도 플롯 생성 ---
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 6))
+        fig.suptitle('Absorbed Dose Distribution in Liquid Scintillator', fontsize=16)
+
+        # 3. 플롯할 데이터에서 0인 값을 NaN(Not a Number)으로 변경하여 흰색으로 표시되게 합니다.
+        plot_grid = dose_grid_nGy.copy()
+        plot_grid[plot_grid == 0] = np.nan
+
+        # 4. 왼쪽 플롯: YZ 평면 (수직 단면)
+        central_x_index = nx // 2
+        yz_slice = plot_grid[central_x_index, :, :]
+        im1 = ax1.imshow(yz_slice.T, cmap=cmap, norm=norm, origin='lower',
+                 extent=[-ny/2 * VOXEL_SIZE_MM, ny/2 * VOXEL_SIZE_MM, -50, 40])
+        ax1.set_title(f'Vertical Slice (YZ Plane at X=0)')
+        ax1.set_xlabel('Y (mm)')
+        ax1.set_ylabel('Z (mm)')
+        fig.colorbar(im1, ax=ax1, label='Dose [nGy] (log scale)')
+
+        # 5. 오른쪽 플롯: XY 평면 (수평 단면)
+        max_dose_z_index = np.unravel_index(np.nanargmax(plot_grid), plot_grid.shape)[2]
+        xy_slice = plot_grid[:, :, max_dose_z_index]
+        z_coords = np.linspace(-50, 40, nz)
+        max_z_pos = z_coords[max_dose_z_index]
+
+        im2 = ax2.imshow(xy_slice.T, cmap=cmap, norm=norm, origin='lower',
+                 extent=[-nx/2 * VOXEL_SIZE_MM, nx/2 * VOXEL_SIZE_MM, -ny/2 * VOXEL_SIZE_MM, ny/2 * VOXEL_SIZE_MM])
+        ax2.set_title(f'Horizontal Slice (XY Plane at Z={max_z_pos:.1f} mm)')
+        ax2.set_xlabel('X (mm)')
+        ax2.set_ylabel('Y (mm)')
+        fig.colorbar(im2, ax=ax2, label='Dose [nGy] (log scale)')
+
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+        # --- 그림 저장 및 화면에 표시 ---
+        plt.savefig(OUTPUT_FILENAME, dpi=300)
+        print(f"'{OUTPUT_FILENAME}' 파일이 성공적으로 저장되었습니다.")
+        print("이제 그림을 화면 창으로 보여줍니다...")
+        plt.show()
+        ```
+        <img width="1320" height="682" alt="image" src="https://github.com/user-attachments/assets/9b7c9438-71d6-4472-8a65-03ffbdf92171" />
+
 -----
 
 ## 6\. Geant4 v11 주요 명령어 및 학습 내용
