@@ -57,8 +57,12 @@ function rung4() {
         "${image_name}" bash
 }
 ```
-
 추가 후 `source ~/.bashrc` 명령어로 적용하거나 새 터미널을 엽니다.
+
+**3) 호스트 머신에 현재 컨테이너 저장:** 또한 **컨테이너** 내용을 저장하기 위해서 컨테이너 터미널이 아닌 호스트 터미널에서 다음 명령어로 컨테이너 커널 설정을 저장 
+```bash
+docker commit g4dev my-g4-env:1.0
+```
 
 ### 3.2. 컨테이너 환경 변수 영구 설정 (선택 사항)
 
@@ -73,6 +77,7 @@ echo 'source /usr/local/root/bin/thisroot.sh' >> ~/.bashrc
 ```
 
 이렇게 설정하면, 다음부터 컨테이너에 접속할 때 Geant4와 ROOT 환경이 자동으로 활성화됩니다.
+
 
 -----
 
