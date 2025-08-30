@@ -59,6 +59,10 @@ G4bool LSSD::ProcessHits(G4Step* aStep, G4TouchableHistory* /*ROhist*/)
   newHit->SetTrackID(track->GetTrackID());
   newHit->SetParentID(track->GetParentID());
   newHit->SetParticleName(track->GetDefinition()->GetParticleName());
+  
+  // 추가: 현재 스텝의 논리 볼륨 이름을 가져와 Hit에 저장
+  G4String volumeName = track->GetVolume()->GetLogicalVolume()->GetName();
+  newHit->SetVolumeName(volumeName);
 
   // 입자를 생성시킨 물리 프로세스의 이름을 기록합니다.
   const G4VProcess* creatorProcess = track->GetCreatorProcess();
